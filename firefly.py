@@ -2,7 +2,6 @@ import random
 import math
 import time
 import matplotlib.pyplot as plt
-<<<<<<< HEAD
 from matplotlib.ticker import MaxNLocator
 
 MAX_GENERATION = 10
@@ -10,16 +9,6 @@ POPULATION_SIZE = 50
 DIMENSION_SIZE = 30
 ALPHA = 0.5
 BETA0 = 0.2
-=======
-plt.style.use('seaborn-whitegrid')
-from matplotlib.ticker import MaxNLocator
-
-MAX_GENERATION = 1000
-POPULATION_SIZE = 100
-DIMENSION_SIZE = 30
-ALPHA = 0.5
-BETA0 = 2
->>>>>>> 3c8be39ece9364208de450aee01d0a4d017cebfb
 GAMMA = 1.0
 TOP_LIMIT = 100
 DOWN_LIMIT = -100
