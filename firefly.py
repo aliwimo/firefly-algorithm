@@ -3,15 +3,16 @@ import math
 import time
 import matplotlib.pyplot as plt
 from matplotlib.ticker import MaxNLocator
+import numpy as np
 
-MAX_GENERATION = 10
-POPULATION_SIZE = 50
-DIMENSION_SIZE = 30
-ALPHA = 0.5
-BETA0 = 0.2
+MAX_GENERATION = 50
+POPULATION_SIZE = 90
+DIMENSION_SIZE = 2
+ALPHA = 0.2
+BETA0 = 1.0
 GAMMA = 1.0
-TOP_LIMIT = 100
-DOWN_LIMIT = -100
+TOP_LIMIT = 2
+DOWN_LIMIT = -2
 
 Location_Array = []
 Firefly_List = []
@@ -25,18 +26,34 @@ class Firefly:
         for index in range(DIMENSION_SIZE):
             self.location.append(location[index])
 
-    def brightness(self):
-        brightness = 0
-        for index in range(DIMENSION_SIZE):
-            brightness += self.location[index] ** 2
-        return brightness
-
-    # def brightness(self):
+    # def brightness(self): #f1
     #     x = self.location[0]
     #     y = self.location[1]
     #     return ((x + (2 * y) - 7) ** 2) + (((2 * x) + y - 5) ** 2)
 
-    # def brightness(self):
+    def brightness(self): #f2
+        x = self.location[0]
+        y = self.location[1]
+        return x * math.sin(4 * math.pi * x) - y * math.sin(4 * math.pi * y + math.pi + 1) 
+
+    # def brightness(self): #f3 (Sphere)
+    #     brightness = 0
+    #     for index in range(DIMENSION_SIZE):
+    #         brightness += self.location[index] ** 2
+    #     return brightness
+
+    # def brightness(self): #f4
+    #     brightness = 0
+    #     for index in range(DIMENSION_SIZE):
+    #         x1 = self.location[index]
+    #         try:
+    #             x2 = self.location[index + 1]
+    #         except IndexError:
+    #             x2 = 0
+    #         brightness += 100 * ((x2 - (x1 ** 2)) ** 2) + ((x1 - 1) ** 2)
+    #     return brightness
+
+    # def brightness(self): #f5
     #     brightness = 0
     #     for index in range(DIMENSION_SIZE):
     #         xi = self.location[index]
@@ -84,8 +101,8 @@ def run():
     for i in range(POPULATION_SIZE):
         moved = False
         for j in range(POPULATION_SIZE):
-            # if Firefly_List[i].brightness() > Firefly_List[j].light_intensity(Firefly_List[i]):
-            if Firefly_List[i].brightness() < Firefly_List[j].brightness():
+            if Firefly_List[i].brightness() > Firefly_List[j].light_intensity(Firefly_List[i]):
+            # if Firefly_List[i].brightness() < Firefly_List[j].brightness():
                 new_firefly = Firefly(Firefly_List[i].location)
                 new_firefly.update_location(Firefly_List[j])
                 moved = True
@@ -95,13 +112,22 @@ def run():
             Firefly_List[i].update_location(Firefly_List[j])
 
 
-def rank_fireflies():
+def rank_fireflies(): #Global Minimum
     best_firefly = Firefly_List[0]
     for i in range(POPULATION_SIZE):
         if Firefly_List[i].brightness() < best_firefly.brightness():
             best_firefly = Firefly_List[i]
     print(best_firefly.brightness())
     Best.append(best_firefly.brightness())
+
+
+# def rank_fireflies(): #Global Maximum
+#     best_firefly = Firefly_List[0]
+#     for i in range(POPULATION_SIZE):
+#         if Firefly_List[i].brightness() > best_firefly.brightness():
+#             best_firefly = Firefly_List[i]
+#     print(best_firefly.brightness())
+#     Best.append(best_firefly.brightness())
 
 
 def show_plot():
