@@ -5,14 +5,14 @@ import matplotlib.pyplot as plt
 from matplotlib.ticker import MaxNLocator
 import numpy as np
 
-MAX_GENERATION = 50
-POPULATION_SIZE = 90
-DIMENSION_SIZE = 2
-ALPHA = 0.2
-BETA0 = 1.0
+MAX_GENERATION = 2000
+POPULATION_SIZE = 100
+DIMENSION_SIZE = 30
+ALPHA = 0.5
+BETA0 = 0.2
 GAMMA = 1.0
-TOP_LIMIT = 2
-DOWN_LIMIT = -2
+TOP_LIMIT = 10
+DOWN_LIMIT = -10
 
 Location_Array = []
 Firefly_List = []
@@ -31,10 +31,10 @@ class Firefly:
     #     y = self.location[1]
     #     return ((x + (2 * y) - 7) ** 2) + (((2 * x) + y - 5) ** 2)
 
-    def brightness(self): #f2
-        x = self.location[0]
-        y = self.location[1]
-        return x * math.sin(4 * math.pi * x) - y * math.sin(4 * math.pi * y + math.pi + 1) 
+    # def brightness(self): #f2
+    #     x = self.location[0]
+    #     y = self.location[1]
+    #     return x * math.sin(4 * math.pi * x) - y * math.sin(4 * math.pi * y + math.pi + 1) 
 
     # def brightness(self): #f3 (Sphere)
     #     brightness = 0
@@ -59,6 +59,14 @@ class Firefly:
     #         xi = self.location[index]
     #         brightness += (xi ** 2) - 10 * math.cos(2 * math.pi * xi) - 10
     #     return brightness
+
+    def brightness(self): #f6 n=100, D=30, R=[-10,10], a=0.5, B0=0.2, Gamma=1.0 
+        sigma = 0
+        pi = 1
+        for index in range(DIMENSION_SIZE):
+            sigma += abs(self.location[index])
+            pi *= abs(self.location[index])
+        return sigma + pi
 
     def light_intensity(self, other):
         # return self.brightness() * math.exp((-1) * GAMMA * (self.distance(other) ** 2))
@@ -134,6 +142,7 @@ def show_plot():
     plt.style.use('seaborn-whitegrid')
     ax = plt.axes()
     ax.plot(range(MAX_GENERATION), Best)
+    ax.set_title('Optimal Solutions')
     ax.set_ylabel('Values')
     ax.set_xlabel('Generation')
     ax.xaxis.set_major_locator(MaxNLocator(integer=True))
