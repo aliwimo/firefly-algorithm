@@ -5,137 +5,119 @@ import matplotlib.pyplot as plt
 from matplotlib.ticker import MaxNLocator
 import numpy as np
 
-MAX_GENERATION = 2000
-POPULATION_SIZE = 100
+MAX_GENERATION = 50
+POPULATION_SIZE = 90
 DIMENSION_SIZE = 30
-ALPHA = 0.5
-BETA0 = 0.2
+ALPHA = 0.2
+BETA0 = 1.0
 GAMMA = 1.0
-TOP_LIMIT = 10
-DOWN_LIMIT = -10
+BOUND = 100
+UB = BOUND
+LB = -BOUND
 
-Location_Array = []
-Firefly_List = []
-Firefly_List0 = []
+Location_Array = [0] * DIMENSION_SIZE
+Firefly_List = [0] * POPULATION_SIZE
+Fitnesses = [0] * POPULATION_SIZE
+Disntances = [0] * POPULATION_SIZE
 Best = []
-
 
 class Firefly:
     def __init__(self, location):
-        self.location = []
-        for index in range(DIMENSION_SIZE):
-            self.location.append(location[index])
+        self.location = location.copy()
+        self.fitness = self.update_fitness()
 
-    # def brightness(self): #f1
-    #     x = self.location[0]
-    #     y = self.location[1]
-    #     return ((x + (2 * y) - 7) ** 2) + (((2 * x) + y - 5) ** 2)
+    def update_fitness(self): #f3 (Sphere)
+        return sum(i ** 2 for i in self.location)
 
-    # def brightness(self): #f2
-    #     x = self.location[0]
-    #     y = self.location[1]
-    #     return x * math.sin(4 * math.pi * x) - y * math.sin(4 * math.pi * y + math.pi + 1) 
+    def light_intensity(self, distance):
+        return self.fitness * math.exp(-GAMMA * (distance ** 1))
 
-    # def brightness(self): #f3 (Sphere)
-    #     brightness = 0
-    #     for index in range(DIMENSION_SIZE):
-    #         brightness += self.location[index] ** 2
-    #     return brightness
+    def attractiveness(self, distance):
+        return BETA0 * math.exp(-GAMMA * (distance ** 2))
 
-    # def brightness(self): #f4
-    #     brightness = 0
-    #     for index in range(DIMENSION_SIZE):
-    #         x1 = self.location[index]
-    #         try:
-    #             x2 = self.location[index + 1]
-    #         except IndexError:
-    #             x2 = 0
-    #         brightness += 100 * ((x2 - (x1 ** 2)) ** 2) + ((x1 - 1) ** 2)
-    #     return brightness
-
-    # def brightness(self): #f5
-    #     brightness = 0
-    #     for index in range(DIMENSION_SIZE):
-    #         xi = self.location[index]
-    #         brightness += (xi ** 2) - 10 * math.cos(2 * math.pi * xi) - 10
-    #     return brightness
-
-    def brightness(self): #f6 n=100, D=30, R=[-10,10], a=0.5, B0=0.2, Gamma=1.0 
-        sigma = 0
-        pi = 1
-        for index in range(DIMENSION_SIZE):
-            sigma += abs(self.location[index])
-            pi *= abs(self.location[index])
-        return sigma + pi
-
-    def light_intensity(self, other):
-        # return self.brightness() * math.exp((-1) * GAMMA * (self.distance(other) ** 2))
-        return self.brightness() * math.exp((-1) * GAMMA * self.distance(other))
-
-    def attractiveness(self, other):
-        # return BETA0 * math.exp((-1) * GAMMA * (self.distance(other) ** 2))
-        return BETA0 * math.exp((-1) * GAMMA * self.distance(other))
-
-    def distance(self, other):
-        distance = 0
-        if other != self:
-            for index in range(DIMENSION_SIZE):
-                distance += (self.location[index] - other.location[index]) ** 2
-        return math.sqrt(distance)
-
-    def update_location(self, other):
+    def update_location(self, other, distance):
         for index in range(DIMENSION_SIZE):
             epsilon = random.random() - 0.5
-            # epsilon = 0.1
-            rand = ALPHA * epsilon
-            self.location[index] += self.attractiveness(other) * (other.location[index] - self.location[index]) + rand
-            if self.location[index] > TOP_LIMIT:
-                self.location[index] = TOP_LIMIT
-            if self.location[index] < DOWN_LIMIT:
-                self.location[index] = DOWN_LIMIT
+            alpha = ALPHA - (random.uniform(-ALPHA, ALPHA))
+            rand = alpha * epsilon
+            self.location[index] += self.attractiveness(distance) * (other.location[index] - self.location[index]) + rand
+            # if self.location[index] > UB:
+            #     self.location[index] = UB
+            # if self.location[index] < LB:
+            #     self.location[index] = LB
+
+    def move_randomly(self):
+        for index in range(DIMENSION_SIZE):
+            epsilon = random.random() - 0.5
+            alpha = ALPHA - (random.uniform(0, ALPHA))
+            rand = alpha * epsilon
+            self.location[index] += rand
+
+    def check_bounds(self):
+        for index in range(DIMENSION_SIZE):
+            if self.location[index] > UB:
+                self.location[index] = UB
+            if self.location[index] < LB:
+                self.location[index] = LB
 
 
 def generate_fireflies():
     for i in range(POPULATION_SIZE):
-        del Location_Array[:]
         for j in range(DIMENSION_SIZE):
-            Location_Array.append(random.randint(DOWN_LIMIT, TOP_LIMIT))
-        Firefly_List.append(Firefly(Location_Array))
-        Firefly_List0.append(Firefly(Location_Array))
+            Location_Array[j] = random.uniform(LB, UB)
+        Firefly_List[i] = Firefly(Location_Array)
+        Fitnesses[i] = Firefly_List[i].fitness
 
 
+def calc_all_distances():
+    for i in range(POPULATION_SIZE):
+        Disntances[i] = update_distance(Firefly_List[i])
+
+
+def update_distance(Firefly):
+    inner_array = [0] * POPULATION_SIZE
+    for i in range(POPULATION_SIZE):
+        distance = 0
+        for j in range(DIMENSION_SIZE):
+            distance += (Firefly.location[j] - Firefly_List[i].location[j]) ** 2
+        inner_array[i] = math.sqrt(distance)
+    return inner_array
 
 def run():
     for i in range(POPULATION_SIZE):
         moved = False
         for j in range(POPULATION_SIZE):
-            if Firefly_List[i].brightness() > Firefly_List[j].light_intensity(Firefly_List[i]):
-            # if Firefly_List[i].brightness() < Firefly_List[j].brightness():
+            distance = Disntances[i][j]
+            if Firefly_List[i].light_intensity(distance) < Firefly_List[j].light_intensity(distance):
                 new_firefly = Firefly(Firefly_List[i].location)
-                new_firefly.update_location(Firefly_List[j])
+                new_firefly.update_location(Firefly_List[j], distance)
+                new_firefly.fitness = new_firefly.update_fitness()
                 moved = True
-                if new_firefly.brightness() < Firefly_List[i].brightness():
+                if new_firefly.fitness < Firefly_List[i].fitness:
                     Firefly_List[i] = new_firefly
+                    Fitnesses[i] = new_firefly.fitness
         if not moved:
-            Firefly_List[i].update_location(Firefly_List[j])
+            new_firefly = Firefly(Firefly_List[i].location)
+            new_firefly.move_randomly()
+            new_firefly.fitness = new_firefly.update_fitness()
+            if new_firefly.fitness < Firefly_List[i].fitness:
+                Firefly_List[i] = new_firefly
+                Fitnesses[i] = new_firefly.fitness
+        Firefly_List[i].check_bounds()
+        new_firefly.fitness = Firefly_List[i].update_fitness()
+        Disntances[i] = update_distance(Firefly_List[i])
 
 
 def rank_fireflies(): #Global Minimum
-    best_firefly = Firefly_List[0]
-    for i in range(POPULATION_SIZE):
-        if Firefly_List[i].brightness() < best_firefly.brightness():
-            best_firefly = Firefly_List[i]
-    print(best_firefly.brightness())
-    Best.append(best_firefly.brightness())
+    best_firefly = min(Fitnesses)
+    print(best_firefly)
+    Best.append(best_firefly)
 
 
 # def rank_fireflies(): #Global Maximum
-#     best_firefly = Firefly_List[0]
-#     for i in range(POPULATION_SIZE):
-#         if Firefly_List[i].brightness() > best_firefly.brightness():
-#             best_firefly = Firefly_List[i]
-#     print(best_firefly.brightness())
-#     Best.append(best_firefly.brightness())
+#     best_firefly = max(Fitnesses)
+#     print(best_firefly)
+#     Best.append(best_firefly)
 
 
 def show_plot():
@@ -150,6 +132,8 @@ def show_plot():
     
 
 generate_fireflies()
+calc_all_distances()
+# print(Fitnesses)
 for gen in range(MAX_GENERATION):
     start_time = time.time()
     print("Starting Generation: {}".format(gen))
@@ -158,3 +142,4 @@ for gen in range(MAX_GENERATION):
     rank_fireflies()
     print("Generation Time: {}".format(elapsed_time))
 show_plot()
+# print(Fitnesses)
