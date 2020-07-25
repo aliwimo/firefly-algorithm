@@ -1,2 +1,6 @@
-.vscode/
-tests/
+tests
+amo.py
+mffa.py
+.vscode
+__pycache__
+.gitignore
